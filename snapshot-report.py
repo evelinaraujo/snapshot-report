@@ -1,36 +1,44 @@
 #!/usr/bin/python
 
+from datetime import datetime, timedelta
 import logging
 import boto3
-from timedelta from timedelta, 
+#import csv
 
-logging = logging.getLogger()
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-#Variables
-tag_key = 'Name'
-tag_value = ''
+tag_key='Name'
+tag_value = 'Evelin-Test'
+account='061682043522'
 
-# Check how many snapshots we have
+def describe_snapshot(ec2, snapshot):
+    client = boto3.client('ec2')
+    response = client.describe_snapshots(
+        OwnerIds = [account]
+    )
+    number = len(response['Snapshots'])
+    print("There are a total of %s Snapshots in account %s " % (number, account) )
+    for snapshot in response['Snapshots']:
+        print snapshot['VolumeId']
+        for volume in snapshot['VolumeId']:
+            response2 = client.describe_volumes()
+            print volume 
+            # for volume['Volumes']:
+            #     print(volume['Attachments'])
 
-ec2 = boto3.resource('ec2')
-snapshot = ec2.Snapshot('id')
-
-def describe_snapshots(event, context):
-    for i in snapshot:
-        print i
-        print("These are the current snapshots %s" % i)
-        #for every snapshot describe the snapshot if its associated to an instance
-        ec2.describe_snapshots(
-            Filters = [
-                {
-                    'Name':
-                    'Values'
-                }
-            ]
-        )
+    # for snapshot in response['Snapshots']:
+    #     response2 = ec2.describe_volume ()
+    #     print h
+        # if response2['Volumes']['Attachments']
 
         
+# with open('snapshot-report.csv', 'wb')
 
 
-
+        # Filters = [
+        #     {
+        #         'Name': 'tag:' + tag_key,
+        #         'Values': [tag_value]
+        #     }
+        # ]
