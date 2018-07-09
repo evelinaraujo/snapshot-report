@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta, date
 import logging
 import boto3
-#import csv
+import csv
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -12,16 +12,18 @@ logger.setLevel(logging.INFO)
 tag_key='Name'
 account='061682043522'
 client = boto3.client('ec2')
+s3bucket = "evelin-test"
 
-def describe_snapshot():
+def describe_snapshot(snapid,age):
     snapshot = client.describe_snapshots(
         OwnerIds = [account])['Snapshots']
     number = len(snapshot)
     print("There are a total of %s Snapshots in account %s " % (number, account))    
     for snap in snapshot:
         snapid = snap['SnapshotId']
-        age = snap['StartTime'].strftime('%F')
+        age = snap['StartTime']#.strftime('%F')
         print ("Snapshot %s was created on %s" % (snapid, age))
+        return snapid, age
 
 def describe_volumes():
     volume = client.describe_volumes()
@@ -42,9 +44,32 @@ def describe_volumes():
                                 if m['Key'] == 'Name':
                                     name = m['Value']
                                     print ("Volume %s  is attached to instance name %s %s" % (volumeid, name, instanceid))
-                                
 
-def lambda_handler(event,context):
+def export_to_csv():
+    with open('report.csv', 'w') as csvfile:
+        fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
+        #fieldnames = ['first_name', 'last_name', 'Grade']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()    
+        writer.writerows(
+            [
+                {'Snapshots': describe_snapshot(snapid),
+
+                }
+            ]
+        )
+        #writer.writerows([{'Grade': 'B', 'first_name': 'Alex', 'last_name': 'Brian'},
+                        # {'Grade': 'A', 'first_name': 'Rachael', 'last_name': 'Rodriguez'},
+                        # {'Grade': 'C', 'first_name': 'Tom', 'last_name': 'smith'},
+                        # {'Grade': 'B', 'first_name': 'Jane', 'last_name': 'Oscar'},
+                        # {'Grade': 'A', 'first_name': 'Kennzy', 'last_name': 'Tim'}])
+            
+print("writing complete")
+
+def lambda_handler():
     describe_snapshot()
-#    return age, number, snapshot
     describe_volumes()
+    export_to_csv()
+
+if __name__ == '__main__':
+    lambda_handler()
