@@ -16,8 +16,8 @@ s3bucket = "evelin-test"
 
 def describe_snapshot():
     #initializing two arrays for snap id and age  
-    snapid = []
-    age = []
+    snapshotid = []
+    snapshotage = []
     snapshot = client.describe_snapshots(
         OwnerIds = [account])['Snapshots']
     number = len(snapshot)
@@ -25,46 +25,62 @@ def describe_snapshot():
     #appending to the empty array every time this loops
     for snap in snapshot:
         snapid = snap['SnapshotId']
-        snapid.append
-        age = snap['StartTime']#.strftime('%F')
+        snapshotid.append(snapid)
+        age = snap['StartTime'].strftime('%F')
+        snapshotage.append(age)
         print ("Snapshot %s was created on %s" % (snapid, age))
-    
+    print snapshotid
+    print snapshotage
     return snapid, age
 
 def describe_volumes():
-    volume = client.describe_volumes()
-    for v in volume['Volumes']:
-        if v['Attachments'] == []:
-            volumeid = v['VolumeId']
+    volumeids = []
+    instanceids = []
+    instancename = []
+    volumes = client.describe_volumes()
+    #Iterate through the list of volumes
+    for volume in volumes['Volumes']:
+        #if there are no attachments, itll print the print statement
+        #this will probably append all volumes not just the ones associated to snapshots
+        volumeid = volume['VolumeId']
+        volumeids.append(volumeid)
+        if volume['Attachments'] == []:
             print ("The following volumes are not attached to an instance %s" % volumeid)
         else:
-            for i in v['Attachments']:
-                instanceid = i['InstanceId']
-                instance = client.describe_instances(InstanceIds = [instanceid])['Reservations']
-                for i in instance:
-                    for l in i['Instances']:
-                        if l['Tags'] == []:
+            #If there are attachments to the volume, itll go through this else statement and append to volumeids array & instanceids array
+            for attachments in volume['Attachments']:
+                instanceid = attachments['InstanceId']
+                instancelist = client.describe_instances(InstanceIds = [instanceid])['Reservations']
+                
+                instanceids.append(instanceid)
+                   
+                for instances in instancelist:
+                    for instance in instances['Instances']:
+                        if instance['Tags'] == []:
                             print("Volume %s is attached to instance ID %s with no tag name" % (volumeid, instanceid))
                         else:
-                            for m in l['Tags']:
-                                if m['Key'] == 'Name':
-                                    name = m['Value']
+                            for tag in instance['Tags']:
+                                if tag['Key'] == 'Name':
+                                    name = tag['Value']
+                                    instancename.append(name)
                                     print ("Volume %s  is attached to instance name %s %s" % (volumeid, name, instanceid))
+    print volumeids
+    print instanceids
+    print instancename
+# def export_to_csv():
+#     with open('report.csv', 'w') as csvfile:
+#         fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
+#         #fieldnames = ['first_name', 'last_name', 'Grade']
+#         snapid, age = describe_snapshot()
+#         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+#         writer.writeheader()    
+#         writer.writerows(
+#             [
+#                 {'Snapshots': snapid, 'Age': age,
 
-def export_to_csv():
-    with open('report.csv', 'w') as csvfile:
-        fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
-        #fieldnames = ['first_name', 'last_name', 'Grade']
-        snapid, age = describe_snapshot()
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()    
-        writer.writerows(
-            [
-                {'Snapshots': snapid, 'Age': age,
-
-                }
-            ]
-        )
+#                 }
+#             ]
+#         )
         #writer.writerows([{'Grade': 'B', 'first_name': 'Alex', 'last_name': 'Brian'},
                         # {'Grade': 'A', 'first_name': 'Rachael', 'last_name': 'Rodriguez'},
                         # {'Grade': 'C', 'first_name': 'Tom', 'last_name': 'smith'},
@@ -73,10 +89,10 @@ def export_to_csv():
             
 print("writing complete")
 
-def lambda_handler():
+def lambda_handler(event, context):
     describe_snapshot()
     describe_volumes()
-    export_to_csv()
+    #export_to_csv()
 
 if __name__ == '__main__':
     lambda_handler()
