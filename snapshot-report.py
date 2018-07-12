@@ -18,8 +18,7 @@ def describe_snapshot():
     #initializing two arrays for snap id and age  
     snapshotid = []
     snapshotage = []
-    snapshot = client.describe_snapshots(
-        OwnerIds = [account])['Snapshots']
+    snapshot = client.describe_snapshots(OwnerIds = [account])['Snapshots']
     number = len(snapshot)
     print("There are a total of %s Snapshots in account %s " % (number, account))   
     #appending to the empty array every time this loops
@@ -31,7 +30,7 @@ def describe_snapshot():
         print ("Snapshot %s was created on %s" % (snapid, age))
     print snapshotid
     print snapshotage
-    return snapid, age
+    return snapshotid, snapshotage
 
 def describe_volumes():
     volumeids = []
@@ -64,23 +63,29 @@ def describe_volumes():
                                     name = tag['Value']
                                     instancename.append(name)
                                     print ("Volume %s  is attached to instance name %s %s" % (volumeid, name, instanceid))
+
     print volumeids
     print instanceids
     print instancename
-# def export_to_csv():
-#     with open('report.csv', 'w') as csvfile:
-#         fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
-#         #fieldnames = ['first_name', 'last_name', 'Grade']
-#         snapid, age = describe_snapshot()
-#         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-#         writer.writeheader()    
-#         writer.writerows(
-#             [
-#                 {'Snapshots': snapid, 'Age': age,
+    return volumeids, instanceids, instancename
+    
+def export_to_csv():
+    with open('report.csv', 'w') as csvfile:
+        fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
+        #fieldnames = ['first_name', 'last_name', 'Grade']
+        
+        snapshotid, snapshotage = describe_snapshot()
+        volumeids, instanceids, instancename = describe_volumes()
 
-#                 }
-#             ]
-#         )
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()    
+        writer.writerows(
+            [
+                {'Snapshots': snapshotid, 'Age': snapshotage, 'VolumeID': volumeids, 'Associated to Instance Y/N': '', 'InstanceID': instanceids, 'Instance Name': instancename
+
+                }
+            ]
+        )
         #writer.writerows([{'Grade': 'B', 'first_name': 'Alex', 'last_name': 'Brian'},
                         # {'Grade': 'A', 'first_name': 'Rachael', 'last_name': 'Rodriguez'},
                         # {'Grade': 'C', 'first_name': 'Tom', 'last_name': 'smith'},
