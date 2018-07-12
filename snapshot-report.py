@@ -14,16 +14,22 @@ account='061682043522'
 client = boto3.client('ec2')
 s3bucket = "evelin-test"
 
-def describe_snapshot(snapid,age):
+def describe_snapshot():
+    #initializing two arrays for snap id and age  
+    snapid = []
+    age = []
     snapshot = client.describe_snapshots(
         OwnerIds = [account])['Snapshots']
     number = len(snapshot)
-    print("There are a total of %s Snapshots in account %s " % (number, account))    
+    print("There are a total of %s Snapshots in account %s " % (number, account))   
+    #appending to the empty array every time this loops
     for snap in snapshot:
         snapid = snap['SnapshotId']
+        snapid.append
         age = snap['StartTime']#.strftime('%F')
         print ("Snapshot %s was created on %s" % (snapid, age))
-        return snapid, age
+    
+    return snapid, age
 
 def describe_volumes():
     volume = client.describe_volumes()
@@ -49,11 +55,12 @@ def export_to_csv():
     with open('report.csv', 'w') as csvfile:
         fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Associated to Instance Y/N', 'InstanceID', 'Instance Name']
         #fieldnames = ['first_name', 'last_name', 'Grade']
+        snapid, age = describe_snapshot()
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()    
         writer.writerows(
             [
-                {'Snapshots': describe_snapshot(snapid),
+                {'Snapshots': snapid, 'Age': age,
 
                 }
             ]
