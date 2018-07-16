@@ -56,7 +56,7 @@ def describe_volumes():
                     VolumeIds = [snap]
                 )['Volumes']
                 print volumes
-                for volume in volumes:
+                for volume in volumes:  
                     print volume['Attachments']
                     try:
                         for snapvolume in volume['Attachments']:
