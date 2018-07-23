@@ -29,13 +29,25 @@ def describe_snapshot():
     for snapshot in snapshotlist:
         snapshotID = snapshot['SnapshotId']
         snapshotlistarray.append(snapshotID)
-    
+        
+        snapshotage = snapshot['StartTime']#.strftime
+        snapshotagearray.append(snapshotage)
+
+        snapshotvolume = snapshot['VolumeId']
+        snapshotvolumearray.append(snapshotvolume)
+
     return snapshotlistarray, snapshotagearray, snapshotvolumearray
 
-def yoyo (snapshotlistarray, snapshotagearray, snapshotvolumearray):    
-    print(snapshotlistarray)
-snapshotlistarray,snapshotagearray,snapshot = describe_snapshot()
-yoyo(snapshotlistarray)
+def describe_volume(snapshotvolumearray):
+    print(snapshotvolumearray)
+    
+snapshotvolumearray = describe_snapshot()
+describe_volume(snapshotvolumearray)
+
+# def yoyo (snapshotlistarray, snapshotagearray, snapshotvolumearray):    
+#     print(snapshotlistarray,snapshotagearray,snapshotvolumearray)
+# snapshotlistarray,snapshotagearray,snapshotvolumearray = describe_snapshot()
+# yoyo(snapshotlistarray,snapshotagearray,snapshotvolumearray)
 
 
 #    describe_snapshot()
