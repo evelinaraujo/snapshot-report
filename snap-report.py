@@ -20,12 +20,11 @@ def describe_snapshot():
     snapshotlistarray = []
     snapshotagearray = []
     snapshotvolumearray = []
+   
     #storing the dictionary of snapshots in snapshot variable
     snapshotlist = client.describe_snapshots(OwnerIds = [account])['Snapshots']
     snapshotnumber = len(snapshotlist)
-    # literally kind of useless within the csv file
-    print("There are a total of %s Snapshots in account %s " % (snapshotnumber, account))   
-    
+     
     for snapshot in snapshotlist: 
         #printing the snapshot id of every snapshot
         snapshotID = snapshot['SnapshotId']
@@ -39,30 +38,34 @@ def describe_snapshot():
     
        # print ("Snapshot %s was created on %s" % (snapshotID, snapshotage))
  #   print snapshotvolumearray
+    print("There are a total of %s Snapshots in account %s " % (snapshotnumber, account))   
     return snapshotlistarray, snapshotagearray, snapshotvolumearray
     
 def describe_volumes():
     volumeexist = []
     instanceIds = []
-    snapshotvolumearray = describe_snapshot()
+    yo = describe_snapshot()
+    print yo
    # print(snapshotlistarray,snapshotagearray, snapshotvolumearray)
     # for every  volume in the snapshot array, try describing the volume to check whether it exists
     # if it exists, go into the next loop and check the attachments for snapshot name attached to it
+    #print snapshotvolumearray
     for snapshotvolume in snapshotvolumearray:
-      #  print snapshotvolume
+        # print snapshotvolume
         for snap in snapshotvolume:
+            #print snap
             try:
                 volumes = client.describe_volumes(
                     VolumeIds = [snap]
                 )['Volumes']
-                print volumes
+                # print volumes
                 for volume in volumes:  
-                    print volume['Attachments']
+                   # print volume['Attachments']
                     try:
                         for snapvolume in volume['Attachments']:
                             #snapshotvolume contains the whole dict of each volume
                             volumeid = snapvolume['VolumeId'] 
-                            print snapvolume
+                           # print volumeid
                             instanceid = snapvolume['InstanceId']
                             #print instanceid
                             volumeexist.append(volumeid)
@@ -73,14 +76,14 @@ def describe_volumes():
                             #print volumeexist
                             # print instanceIds
                     except Exception as e:
-                        print 'no attachments'
-                
+                        volumeexist.append('Volume does not exist')
+
             #if the volume doesn't exist, append volume does not exist
             except Exception as f:
                 # a snapshot can exist with volume associated but volume doesnt exist
-                volumeexist.append('Volume does not exist')
-           # print ("Volume %s does not exist" % snapshotvolume)    
-    print volumeexist
+                print "you suck "
+                # print ("Volume %s does not exist" % snapshotvolume)    
+   # print volumeexist
     return instanceIds, volumeexist
   
 def export_to_csv():
@@ -103,8 +106,6 @@ def export_to_csv():
 
 
 def lambda_handler():
-    describe_snapshot()
-    describe_volumes()
     export_to_csv()
 
 if __name__ == '__main__':
