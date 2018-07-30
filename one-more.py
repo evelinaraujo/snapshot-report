@@ -45,8 +45,17 @@ def get_volume():
 def volume_exist(snapshotvolumearray):
     volumeexistarray = []
     for volume in snapshotvolumearray:
-        print volume    
-    return volume
+        
+        try: 
+            volumes = client.describe_volumes(
+                VolumeIds = [volume]    
+            )['Volumes']
+            volumeexist = volumes['Attachments']
+            volumeexistarray.append(volumeexist)    
+        
+        except Exception as e:
+            volumeexistarray.append('Volume does not exist')
+    return volumeexistarray
 
 snapshotvolumearray = get_volume()
 volume_exist(snapshotvolumearray)
@@ -56,5 +65,5 @@ def display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexis
 snapshotlistarray = get_snapshots()
 snapshotagearray = get_age()
 snapshotvolumearray = get_volume()
-volumeexistarray = volume_exist()
+volumeexistarray = volume_exist(snapshotvolumearray)
 display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray)
