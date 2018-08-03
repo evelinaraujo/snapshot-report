@@ -45,25 +45,72 @@ def get_volume():
 def volume_exist(snapshotvolumearray):
     volumeexistarray = []
     for volume in snapshotvolumearray:
-        
         try: 
-            volumes = client.describe_volumes(
-                VolumeIds = [volume]    
-            )['Volumes']
-            volumeexist = volumes['Attachments']
-            volumeexistarray.append(volumeexist)    
+            volumes = client.describe_volumes(VolumeIds = [volume])['Volumes']
+            for v in volumes:
+                attachment = v['Attachments']
+                for i in attachment:
+                    volumeexist = i['VolumeId']
+                    # print volumeexist
+                    volumeexistarray.append(volumeexist)    
         
         except Exception as e:
             volumeexistarray.append('Volume does not exist')
+            # logging.error(e)
     return volumeexistarray
 
 snapshotvolumearray = get_volume()
 volume_exist(snapshotvolumearray)
 
-def display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray):
-    print (snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray)
+
+def instance_associate():
+    instanceidarray = []
+    for volume in snapshotvolumearray:
+        try: 
+            volumes = client.describe_volumes(VolumeIds = [volume])['Volumes']
+            for v in volumes:
+                attachment = v['Attachments']
+                for i in attachment:
+                    instanceid = i['InstanceId']
+                    instanceidarray.append(instanceid)    
+        
+        except Exception as e:
+            instanceidarray.append('No instance associated')
+            # logging.error(e)
+    return instanceidarray
+
+snapshotvolumearray = get_volume()
+instance_associate()
+
+def instance_name():
+    instancenamearray = []
+    for instance in instanceidarray:
+        # print instance
+        try:
+            reservations = client.describe_instances(InstanceIds = [instance])['Reservations']
+            for instances in reservations:
+                for instance in instances['Instances']:
+                    for i in instance['Tags']:
+                        tag-name = i['Key']
+                        print i
+        except Exception as e:
+            instancenamearray.append('No instance name')
+            # logging.error(e)
+
+    return instancenamearray
+instanceidarray = instance_associate()
+instance_name()
+
+def display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray):
+    # with open('report.csv', 'w') as csvfile:
+    #     fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Volume Exist?', 'Instance ID', 'Instance Name']
+
+
+   print (snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray)
 snapshotlistarray = get_snapshots()
 snapshotagearray = get_age()
 snapshotvolumearray = get_volume()
 volumeexistarray = volume_exist(snapshotvolumearray)
-display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray)
+instanceidarray = instance_associate()
+instanccenamearray = instance_name()
+display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instanccenamearray)
