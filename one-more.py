@@ -80,26 +80,28 @@ def instance_associate():
     return instanceidarray
 
 snapshotvolumearray = get_volume()
-instance_associate()
 
 def instance_name():
     instancenamearray = []
     for instance in instanceidarray:
-        # print instance
         try:
             reservations = client.describe_instances(InstanceIds = [instance])['Reservations']
             for instances in reservations:
                 for instance in instances['Instances']:
-                    for i in instance['Tags']:
-                        tag-name = i['Key']
-                        print i
+                    for tags in instance['Tags']:
+                        if tags["Key"] == "Name":
+                            instancename = tags["Value"]
+                            instancenamearray.append(instancename)
+                            print instancename
+                        else:
+                            instancenamearray.append("No instance name")            
+
         except Exception as e:
-            instancenamearray.append('No instance name')
+            print "No instance"
             # logging.error(e)
 
     return instancenamearray
 instanceidarray = instance_associate()
-instance_name()
 
 def display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray):
     # with open('report.csv', 'w') as csvfile:
