@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, date
 import logging
 import boto3
 import csv
+import pandas as pd
+from io import BytesIO
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -12,7 +14,8 @@ logger.setLevel(logging.INFO)
 tag_key = 'Name'
 account = '061682043522'
 client = boto3.client('ec2')
-s3bucket = "evelin-test"
+s3bucket = "s3://evelin-test"
+
 
 snapshotlist = client.describe_snapshots(OwnerIds = [account])['Snapshots']
 
@@ -30,7 +33,7 @@ def get_snapshots():
 def get_age():
     snapshotagearray = []
     for snapshot in snapshotlist:
-        snapshotage = snapshot['StartTime']#.strftime
+        snapshotage = snapshot['StartTime']
         snapshotagearray.append(snapshotage)
     return snapshotagearray
 
@@ -38,7 +41,7 @@ def get_volume():
     snapshotvolumearray = []
     for snapshot in snapshotlist:
         snapshotvolume = snapshot['VolumeId']
-        snapshotvolumearray.append(snapshotvolume)
+        snapshotvolumearray.append(snapshotvolume)          
 
     return snapshotvolumearray
 
@@ -52,7 +55,7 @@ def volume_exist(snapshotvolumearray):
                 for i in attachment:
                     volumeexist = i['VolumeId']
                     # print volumeexist
-                    volumeexistarray.append(volumeexist)    
+                    volumeexistarray.append("Volume exists")    
         
         except Exception as e:
             volumeexistarray.append('Volume does not exist')
@@ -91,24 +94,28 @@ def instance_name():
                     for tags in instance['Tags']:
                         if tags["Key"] == "Name":
                             instancename = tags["Value"]
-                            instancenamearray.append(instancename)
-                            print instancename
-                        else:
-                            instancenamearray.append("No instance name")            
+                            instancenamearray.append(instancename)     
 
         except Exception as e:
-            print "No instance"
+            instancenamearray.append("no instance name")
+            # print "No instance"
             # logging.error(e)
 
     return instancenamearray
 instanceidarray = instance_associate()
 
 def display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray):
-    # with open('report.csv', 'w') as csvfile:
-    #     fieldnames = ['Snapshots', 'Age', 'VolumeID', 'Volume Exist?', 'Instance ID', 'Instance Name']
+    client = boto3.client('s3')
+    
+    df = pd.DataFrame([snapshotlistarray,snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray])
+    df.index = ['Snapshots', 'Age', 'VolumeID', 'Volume Exist?', 'Instance ID', 'Instance Name']
 
+    df.to_csv(csv_buffer, index=False)
+        
+    # write stream to S3
+    obj = client.put_object(Bucket="evelin-test", Key = 'report.csv', Body=gz_buffer.getvalue())
 
-   print (snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray)
+    print (snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instancenamearray)
 snapshotlistarray = get_snapshots()
 snapshotagearray = get_age()
 snapshotvolumearray = get_volume()
@@ -116,3 +123,7 @@ volumeexistarray = volume_exist(snapshotvolumearray)
 instanceidarray = instance_associate()
 instanccenamearray = instance_name()
 display(snapshotlistarray, snapshotagearray, snapshotvolumearray, volumeexistarray, instanceidarray, instanccenamearray)
+
+
+# It looks like df.to_csv takes a file-like instead of an explicit path, so write to a io.BytesIO, and then pass that buffer to s3.upload_fileobj.
+
